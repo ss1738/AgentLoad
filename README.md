@@ -1,6 +1,24 @@
+![AgentLoad visual identity: concurrent request streams crossing a measured pressure boundary](assets/agentload-banner.jpg)
+
 # AgentLoad
 
-AgentLoad answers: **at what concurrent-user level does an HTTP AI agent’s deterministic task-success rate fall below a required threshold?** It uses Locust for HTTP load generation and records auditable JSONL traces.
+Find the first tested concurrency level where an HTTP agent falls below its required task-success rate.
+
+```mermaid
+flowchart TD
+  S[Scenario YAML] --> L[Locust runner] --> E[Agent endpoint]
+  L --> T[Sanitized JSONL traces] --> A[Analyzer] --> R[JSON and Markdown reports]
+```
+
+```mermaid
+sequenceDiagram
+  participant L as Load stage
+  participant E as Agent endpoint
+  L->>E: request
+  E-->>L: response
+  L->>L: classify and assert
+  L->>L: record trace, aggregate, evaluate threshold
+```
 
 ## Scope
 
