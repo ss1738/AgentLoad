@@ -47,6 +47,8 @@ def load_scenario(path: str | Path) -> Scenario:
     levels = data["concurrency"]
     if not isinstance(levels, list) or not levels or any(not isinstance(x, int) or x < 1 for x in levels):
         raise _fail("concurrency must be a non-empty list of positive integers")
+    if len(set(levels)) != len(levels):
+        raise _fail("concurrency levels must not contain duplicates")
     if not isinstance(data["tasks"], list) or not data["tasks"] or any(not isinstance(x, dict) or not isinstance(x.get("prompt"), str) for x in data["tasks"]):
         raise _fail("tasks must be a non-empty list with prompt strings")
     if not isinstance(data["assertions"], dict) or "success_field" not in data["assertions"] or "required_value" not in data["assertions"]:
