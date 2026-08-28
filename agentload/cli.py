@@ -6,7 +6,6 @@ from pathlib import Path
 
 from .analyze import AnalysisError, build_report, build_report_from_stages, markdown_report, write_report
 from .config import load_scenario
-from .runner import run_scenario
 from .trace import read_traces
 
 EXIT_OK = 0
@@ -31,7 +30,10 @@ def main(argv: list[str] | None = None) -> int:
     args = parser.parse_args(argv)
     try:
         if args.command == "run":
-            report = run_scenario(load_scenario(args.scenario), args.host, args.output)
+            scenario = load_scenario(args.scenario)
+            from .runner import run_scenario
+
+            report = run_scenario(scenario, args.host, args.output)
             print(markdown_report(report))
             return EXIT_THRESHOLD if args.fail_under_threshold and report["breaking_point"] is not None else EXIT_OK
         if not 0 <= args.threshold <= 1:
