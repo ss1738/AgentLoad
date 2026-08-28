@@ -1,0 +1,13 @@
+name: simulator-smoke-test
+endpoint: /agent
+concurrency: [1]
+duration_seconds: 0.1
+spawn_rate: 10
+success_threshold: 0.90
+tasks:
+  - prompt: "health check"
+assertions:
+  success_field: success
+  required_value: true
+  max_loop_depth: 5
+  max_cost_usd: 0.05
