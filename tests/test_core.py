@@ -20,7 +20,7 @@ def test_config_valid_and_invalid(tmp_path):
 def test_assertions_and_metrics():
     scenario = type("S", (), {"success_field": "success", "required_value": True, "max_cost_usd": .01, "max_loop_depth": 3, "expected_tool_call": None, "max_latency_ms": None})()
     assert assess(200, {"success": True, "estimated_cost_usd": .001, "loop_depth": 1}, scenario, 2) == (True, None)
-    assert assess(429, {}, scenario, 2)[1] == "rate_limited"
+    assert assess(429, {}, scenario, 2)[1] == "HTTP 429"
     assert percentile([1, 3, 5], .95) == pytest.approx(4.8)
     report = build_report([Trace(1, 10, 200, True, estimated_cost_usd=.01), Trace(1, 20, 429, False, failure_category="rate_limited", estimated_cost_usd=.01), Trace(10, 30, 200, False)], .5, 10)
     assert report["breaking_point"] == 10

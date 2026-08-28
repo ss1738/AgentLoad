@@ -1,0 +1,44 @@
+name: CI
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main, feat/agentload-hardening]
+permissions:
+  contents: read
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    strategy:
+      matrix:
+        python: ['3.10', '3.11', '3.12', '3.13']
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: ${{ matrix.python }}
+      - run: python3 -m pip install -e '.[test,demo]'
+      - run: python3 -m compileall -q agentload examples tests
+      - run: AGENTLOAD_REQUIRE_E2E=1 pytest -q -rs -s tests/test_end_to_end.py
+      - run: AGENTLOAD_REQUIRE_E2E=1 pytest -q -rs
+      - run: agentload --help && agentload run --help && agentload analyze --help
+      - name: Build and smoke-test distributions on Python 3.11
+        if: matrix.python == '3.11'
+        run: |
+          python3 -m pip install '.[build]'
+          python3 -m build
+          python -c "import tarfile, zipfile; wheel='dist/agentload-0.1.0-py3-none-any.whl'; source='dist/agentload-0.1.0.tar.gz'; assert zipfile.is_zipfile(wheel) and tarfile.is_tarfile(source); names=zipfile.ZipFile(wheel).namelist(); assert any(name.startswith('agentload/') for name in names); assert any(name.endswith('METADATA') for name in names); assert any(name.endswith('README.md') for name in names); assert 'agentload-0.1.0.dist-info/licenses/LICENSE' in names; archive=tarfile.open(source); source_names=archive.getnames(); assert any(name.endswith('/README.md') for name in source_names); assert not any('/assets/' in name or '/research/' in name or '/tests/' in name for name in source_names)"
+          package_env="$(mktemp -d)"
+          python3 -m venv "$package_env/venv"
+          "$package_env/venv/bin/python3" -m pip install "$GITHUB_WORKSPACE"/dist/*.whl
+          mkdir "$package_env/work"
+          cd "$package_env/work"
+          "$package_env/venv/bin/agentload" --help
+          "$package_env/venv/bin/agentload" run --help
+          "$package_env/venv/bin/agentload" analyze --help
+          "$package_env/venv/bin/python3" -c "import agentload; print(agentload.__file__); assert '$GITHUB_WORKSPACE' not in agentload.__file__"
+          "$package_env/venv/bin/agentload" analyze "$GITHUB_WORKSPACE/tests/fixtures/passing.jsonl" --threshold 0.90 --output "$package_env/passing"
+          if "$package_env/venv/bin/agentload" analyze "$GITHUB_WORKSPACE/tests/fixtures/failing.jsonl" --threshold 0.90 --output "$package_env/failing" --fail-under-threshold; then exit 1; else exit_code=$?; test "$exit_code" -eq 4; fi
+          test -f "$package_env/passing/report.json"
+          test -f "$package_env/failing/report.json"
