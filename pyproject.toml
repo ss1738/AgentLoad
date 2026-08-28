@@ -1,0 +1,23 @@
+[build-system]
+requires = ["setuptools>=68"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "agentload"
+version = "0.1.0"
+description = "Measure HTTP AI-agent task reliability under load"
+requires-python = ">=3.10"
+dependencies = ["locust>=2.31", "PyYAML>=6.0", "requests>=2.31"]
+
+[project.optional-dependencies]
+demo = ["fastapi>=0.110", "uvicorn>=0.27"]
+test = ["pytest>=8", "fastapi>=0.110", "uvicorn>=0.27"]
+
+[project.scripts]
+agentload = "agentload.cli:main"
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+
+[tool.setuptools.packages.find]
+include = ["agentload*"]

@@ -1,0 +1,15 @@
+name: support-agent-reliability
+endpoint: /agent
+concurrency: [1, 10, 25, 50]
+duration_seconds: 20
+spawn_rate: 10
+success_threshold: 0.90
+tasks:
+  - prompt: "Find the order status for order 1001."
+  - prompt: "Summarize the refund policy."
+  - prompt: "Cancel order 1002 if it has not shipped."
+assertions:
+  success_field: success
+  required_value: true
+  max_loop_depth: 5
+  max_cost_usd: 0.05
