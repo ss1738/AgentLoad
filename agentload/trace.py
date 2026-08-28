@@ -3,12 +3,12 @@ from __future__ import annotations
 
 import json
 from dataclasses import asdict, dataclass
-from enum import StrEnum
+from enum import Enum
 from pathlib import Path
 from typing import Any
 
 
-class FailureCategory(StrEnum):
+class FailureCategory(str, Enum):
     SUCCESS = "success"
     HTTP_429 = "http_429"
     HTTP_4XX = "http_4xx"
