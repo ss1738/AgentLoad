@@ -10,7 +10,7 @@ from locust.env import Environment
 
 from .analyze import build_report, write_report
 from .config import Assertions, Scenario
-from .trace import Trace, write_traces
+from .trace import FailureCategory, Trace, safe_message, write_traces
 
 
 def assess(status: int | None, payload: dict[str, Any], assertions: Assertions, latency_ms: float) -> tuple[bool, str | None]:
@@ -34,10 +34,14 @@ def assess(status: int | None, payload: dict[str, Any], assertions: Assertions, 
 def _trace(concurrency: int, response: Any, payload: dict[str, Any], latency_ms: float, scenario: Scenario) -> Trace:
     status = response.status_code if response is not None else None
     success, reason = assess(status, payload, scenario.assertions, latency_ms)
+    categories = {"rate_limited": FailureCategory.HTTP_429, "http_error": FailureCategory.HTTP_5XX if status and status >= 500 else FailureCategory.HTTP_4XX,
+                  "assertion_failed": FailureCategory.SUCCESS_ASSERTION_FAILED, "cost_exceeded": FailureCategory.COST_LIMIT_EXCEEDED,
+                  "loop_depth_exceeded": FailureCategory.LOOP_LIMIT_EXCEEDED, "latency_exceeded": FailureCategory.LATENCY_LIMIT_EXCEEDED,
+                  "timeout": FailureCategory.TIMEOUT}
     return Trace(concurrency=concurrency, latency_ms=latency_ms, http_status=status, task_success=success,
                  input_tokens=int(payload.get("input_tokens", 0)), output_tokens=int(payload.get("output_tokens", 0)),
                  estimated_cost_usd=float(payload.get("estimated_cost_usd", 0)), tool_call_count=len(payload.get("tool_calls", [])),
-                 loop_depth=int(payload.get("loop_depth", 0)), failure_category=reason, semantic_reason=reason)
+                 loop_depth=int(payload.get("loop_depth", 0)), failure_category=FailureCategory.SUCCESS if success else categories.get(reason, FailureCategory.UNKNOWN_ERROR), error_message=safe_message(reason))
 
 
 def run_scenario(scenario: Scenario, host: str, output: str | Path) -> dict[str, Any]:
