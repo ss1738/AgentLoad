@@ -5,13 +5,28 @@ build-backend = "setuptools.build_meta"
 [project]
 name = "agentload"
 version = "0.1.0"
-description = "Measure HTTP AI-agent task reliability under load"
+description = "Find the first tested HTTP-agent concurrency level below a required success rate"
+readme = {file = "README.md", content-type = "text/markdown"}
 requires-python = ">=3.10"
-dependencies = ["locust>=2.31", "PyYAML>=6.0", "requests>=2.31"]
+license = {text = "MIT"}
+classifiers = [
+  "Development Status :: 3 - Alpha",
+  "Programming Language :: Python :: 3",
+  "Programming Language :: Python :: 3.10",
+  "Programming Language :: Python :: 3.11",
+  "Programming Language :: Python :: 3.12",
+  "Programming Language :: Python :: 3.13",
+]
+dependencies = ["locust>=2.31,<3", "PyYAML>=6.0,<7", "requests>=2.31,<3"]
+
+[project.urls]
+Repository = "https://github.com/ss1738/AgentLoad"
+Issues = "https://github.com/ss1738/AgentLoad/issues"
 
 [project.optional-dependencies]
 demo = ["fastapi>=0.110", "uvicorn>=0.27"]
 test = ["pytest>=8", "fastapi>=0.110", "uvicorn>=0.27"]
+build = ["build>=1,<2"]
 
 [project.scripts]
 agentload = "agentload.cli:main"
@@ -21,3 +36,10 @@ testpaths = ["tests"]
 
 [tool.setuptools.packages.find]
 include = ["agentload*"]
+exclude = ["tests*", "research*"]
+
+[tool.setuptools]
+include-package-data = false
+
+[tool.setuptools.data-files]
+"" = ["README.md"]
